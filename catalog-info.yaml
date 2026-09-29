@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: zt-build-and-run-a-bootable-contianer-image-with-image-mode
+  title: zt-build-and-run-a-bootable-contianer-image-with-image-mode
+  description: Learn how to locally build and run a bootable container (bootc)
+    image in Podman Desktop.
+  annotations:
+    ph.rhdp.io/content-type: lab
+    ph.rhdp.io/deployment-mode: self_published
+    ph.rhdp.io/github-user: brthomas-9
+    ph.rhdp.io/owner: brthomas@redhat.com
+    backstage.io/techdocs-ref: dir:.
+    github.com/project-slug: rhpds/zt-build-and-run-a-bootable-contianer-image-with-image-mode
+    ph.rhdp.io/created-at: 2026-09-29T19:56:21.966Z
+  tags:
+    - publishing-house
+    - lab
+    - self-published
+  links:
+    - url: https://github.com/rhpds/zt-build-and-run-a-bootable-contianer-image-with-image-mode
+      title: Repository
+      icon: github
+    - url: https://devspaces.apps.ocpv-infra02.wdc07.infra.demo.redhat.com#https://github.com/rhpds/zt-build-and-run-a-bootable-contianer-image-with-image-mode
+      title: Open in DevSpaces
+      icon: catalog
+    - url: https://central-api-publishing-house.apps.ocpv-infra02.wdc07.infra.demo.redhat.com
+      title: Central
+      icon: dashboard
+spec:
+  type: content
+  lifecycle: experimental
+  owner: rhdp-team
+  system: publishing-house
