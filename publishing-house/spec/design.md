@@ -69,16 +69,15 @@ No server-side automation is required. All work is performed locally in Podman D
 
 ## Infrastructure Requirements
 
-- **Cloud provider:** TBD — confirmed in infrastructure phase
-- **Cluster type:** TBD — confirmed in infrastructure phase
-- **OCP version:** TBD — confirmed in infrastructure phase
-- **Topology:** TBD — confirmed in infrastructure phase
-- **Sizing:** TBD — confirmed in infrastructure phase
-- **Automation approach:** TBD — confirmed in infrastructure phase
-- **AI/MaaS:** TBD — confirmed in infrastructure phase
-- **External services:** TBD — confirmed in infrastructure phase
+- **Cloud provider:** CNV (supports nested virtualization for running VMs in Podman Desktop)
+- **Platform:** RHEL VMs (1 per student)
+- **Per student:** 1 RHEL 10 workstation (8 vCPU, 32GB RAM, 100GB disk) with Podman Desktop pre-installed
+- **Topology:** Per-student
+- **Automation approach:** Ansible (pre-install Podman Desktop, configure Red Hat extensions for bootc/registry/VM)
+- **AI/MaaS:** None
+- **External services:** registry.redhat.io (Red Hat Container Registry for pulling UBI and bootc base images)
 - **AAP version:** N/A — Ansible Automation Platform not used in this lab
-- **Non-GA products:** TBD — confirmed in infrastructure phase
+- **Non-GA products:** None (all products are GA)
 
 ## Assessment Strategy
 
