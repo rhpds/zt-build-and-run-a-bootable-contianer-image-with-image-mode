@@ -17,7 +17,7 @@ project:
   description: "Learn how to locally build and run a bootable container (bootc) image in Podman Desktop."
   # content_reviewer_email and infra_reviewer_email are assigned by the RHDP team — not set by the author
   jira_ticket: ""
-  workflow_id: ""
+  workflow_id: "3423e3ad-f977-4bd8-af7a-47d16849c9a1"
 
 spec:
   title: ""
