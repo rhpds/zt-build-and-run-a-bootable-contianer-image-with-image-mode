@@ -98,11 +98,32 @@ approval_checklist:
   content:
     prerequisites_verifiable: false
     assessment_strategy: ""
-    catalog_gap: ""
-    design_overview: ""
-    module_summaries: []
-    rcars_overlap_pct: null
-    rcars_top_matches: []
+    catalog_gap: "Existing image mode labs run on remote RHEL infrastructure and target platform engineers learning OS management concepts. This lab differentiates by running entirely on the student's local Podman Desktop (Windows/Mac/Linux), targeting application developers who want to learn how to ship containerized applications as bootable images, and teaching the dev-to-production workflow (development container with volumes → production bootable container → VM deployment) rather than just image mode concepts."
+    design_overview: "A beginner lab teaching application developers how to build and deploy LAMP applications as bootable containers using Podman Desktop. Students authenticate to the Red Hat Container Registry, build a LAMP development environment in a container, then package it as a bootable container image and deploy it as a VM disk image. Emphasizes execution-first learning with hands-on checkpoints and immediate visual results."
+    module_summaries:
+      - title: "Access the Red Hat Container Registry"
+        overview: "Configure Red Hat SSO authentication in Podman Desktop to enable access to the Red Hat Container Registry for downloading bootc base images."
+      - title: "Build a LAMP development container"
+        overview: "Create a LAMP (Linux, Apache, MariaDB, PHP) application development environment using RHEL Universal Base Image containers with volume mounts for iterative development. Configure MariaDB with automated initialization scripts and verify the working application."
+      - title: "Build and run a bootable LAMP disk image"
+        overview: "Convert the development container into a production bootable container image using image mode for RHEL, build a VM disk image (qcow2) with bootc-image-builder, and launch the application as a virtual machine."
+    rcars_overlap_pct: 82
+    rcars_top_matches:
+      - title: "Image Mode is the best mode"
+        ci_name: "zt-rhelbu.zt-image-mode-rh1.prod"
+        url: "https://catalog.demo.redhat.com/catalog?item=zt-rhelbu.zt-image-mode-rh1.prod"
+        relevance_score: 82
+        why_it_fits: "This lab directly covers RHEL Image Mode (bootc), Containerfile authoring for OS images, bootc-image-builder for disk image creation, and Podman-based image builds, aligning well with the request's goals of building bootable container images and deploying them as VM disk images."
+      - title: "The Definitive Red Hat Enterprise Linux 10 Hands-On Lab"
+        ci_name: "published.hol-rhel10-cnv.prod"
+        url: "https://catalog.demo.redhat.com/catalog?item=published.hol-rhel10-cnv.prod"
+        relevance_score: 74
+        why_it_fits: "This lab directly covers RHEL 10, bootable containers with RHEL Image Mode (bootc), container image building with Containerfiles, and Podman — all core topics in the request."
+      - title: "Introduction to image mode for Red Hat Enterprise Linux"
+        ci_name: "zt-rhelbu.zt-image-mode-basics.prod"
+        url: "https://catalog.demo.redhat.com/catalog?item=zt-rhelbu.zt-image-mode-basics.prod"
+        relevance_score: 73
+        why_it_fits: "This lab directly covers building bootable container images from Containerfiles, deploying them as VM disk images (QCOW2), and using bootc-image-builder — all of which are explicitly requested topics."
     rejections: []
 
   infra:
