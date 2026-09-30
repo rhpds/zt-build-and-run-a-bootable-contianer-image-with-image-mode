@@ -59,12 +59,15 @@ spec:
 
     # --- VM-specific fields (only when platform = rhel-vms) ---
     # Each entry: {role, count, cpu, ram_gb, disk_gb, os}
+    # NOTE: This host runs nested virtualization — students build and run bootable
+    # container images, then deploy them as nested KVM guests. Sized to accommodate
+    # the nested guest VMs, Podman Desktop, image builds, and LAMP development containers.
     vms_per_student:
-      - role: "rhel-workstation"
+      - role: "build-host"
         count: 1
         cpu: 8
         ram_gb: 32
-        disk_gb: 100
+        disk_gb: 150
         os: "rhel-10"
 
     # --- Common fields (both platforms) ---

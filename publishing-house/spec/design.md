@@ -69,9 +69,10 @@ No server-side automation is required. All work is performed locally in Podman D
 
 ## Infrastructure Requirements
 
-- **Cloud provider:** CNV (supports nested virtualization for running VMs in Podman Desktop)
+- **Cloud provider:** CNV (supports nested virtualization)
 - **Platform:** RHEL VMs (1 per student)
-- **Per student:** 1 RHEL 10 workstation (8 vCPU, 32GB RAM, 100GB disk) with Podman Desktop pre-installed
+- **Per student:** 1 RHEL 10 build host (8 vCPU, 32GB RAM, 150GB disk) with Podman Desktop pre-installed
+  - **Note:** This host runs nested virtualization — students build bootable container images and deploy them as nested KVM guests within Podman Desktop
 - **Topology:** Per-student
 - **Automation approach:** Ansible (pre-install Podman Desktop, configure Red Hat extensions for bootc/registry/VM)
 - **AI/MaaS:** None
