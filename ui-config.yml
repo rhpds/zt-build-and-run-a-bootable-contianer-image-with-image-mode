@@ -4,11 +4,13 @@ antora:
   dir: www
   modules:
     - name: index
-      label: "Introduction"
-    - name: module-01
-      label: "Module 1: Your First Lab Page"
-    - name: module-02
-      label: "Module 2: Another Module"
+      label: "Lab Overview"
+    - name: module-01-access-registry
+      label: "Module 1: Access the Red Hat Container Registry"
+    - name: module-02-lamp-dev-container
+      label: "Module 2: Build a LAMP Development Container"
+    - name: module-03-bootable-disk-image
+      label: "Module 3: Build and Run a Bootable LAMP Disk Image"
 
 tabs:
   - name: ">_ terminal"
