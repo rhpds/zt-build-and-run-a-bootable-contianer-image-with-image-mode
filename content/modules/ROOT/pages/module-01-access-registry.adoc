@@ -1,0 +1,72 @@
+= Module 1: Access the Red Hat Container Registry
+
+== Introduction
+
+In this module, you will configure Red Hat SSO authentication in Podman Desktop to access the Red Hat Container Registry. This authentication is required to pull Red Hat Universal Base Images (UBI) and bootc base images that you'll use in later modules.
+
+**Estimated time:** 10 minutes
+
+== What You'll Do
+
+* Open Podman Desktop and verify the Red Hat extensions are installed
+* Sign in using Red Hat SSO authentication
+* Verify successful authentication to the Red Hat Container Registry
+
+== Steps
+
+=== Step 1: Open Podman Desktop
+
+Open the Red Hat build of Podman Desktop on your RHEL workstation.
+
+NOTE: If this is your first time using Podman Desktop, you may need to initialize the Podman machine. The Red Hat build includes pre-installed extensions for bootable containers, subscription management, and registry access.
+
+=== Step 2: Navigate to Extensions
+
+. Click on **Extensions** in the left navigation panel
+. Select the **Installed** tab
+. Locate the **Red Hat Authentication** extension
+
+The Red Hat build of Podman Desktop includes several pre-installed extensions:
+
+* Red Hat Authentication
+* Bootable Containers
+* Red Hat Subscription Manager
+* Red Hat Container Registry
+
+=== Step 3: Access Authentication Settings
+
+. Click on **Settings** (gear icon) in the bottom left corner
+. Select the **Authentication** tab
+. You should see **Red Hat SSO** with a status of **LOGGED OUT**
+
+=== Step 4: Sign In with Red Hat SSO
+
+. Click the **Sign in** button next to Red Hat SSO
+. A browser window will open with the Red Hat login page
+. Enter your Red Hat account credentials
++
+TIP: If you don't have a Red Hat account, you can register for a free Red Hat Developer subscription at https://developers.redhat.com
+
+. Complete the authentication process
+
+=== Step 5: Verify Authentication Status
+
+Return to Podman Desktop. The authentication status should now show **LOGGED IN** in green.
+
+=== Step 6: Verify Registry Access
+
+. Navigate to **Settings** → **Registries**
+. Verify that **registry.redhat.io** appears in the list of configured registries
+
+This confirms you have authenticated access to the Red Hat Container Registry.
+
+== Verification
+
+You have successfully completed this module when:
+
+* The Red Hat SSO status shows "LOGGED IN" in Podman Desktop Settings → Authentication
+* The Red Hat Container Registry (registry.redhat.io) appears in Settings → Registries
+
+== What's Next
+
+Now that you have authenticated access to the Red Hat Container Registry, you're ready to proceed to xref:module-02-lamp-dev-container.adoc[Module 2: Build a LAMP Development Container], where you'll pull Red Hat Universal Base Images and build a LAMP application development environment.

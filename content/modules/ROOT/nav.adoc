@@ -1,1 +1,4 @@
 * xref:index.adoc[Lab Overview]
+* xref:module-01-access-registry.adoc[Module 1: Access the Red Hat Container Registry]
+* xref:module-02-lamp-dev-container.adoc[Module 2: Build a LAMP Development Container]
+* xref:module-03-bootable-disk-image.adoc[Module 3: Build and Run a Bootable LAMP Disk Image]

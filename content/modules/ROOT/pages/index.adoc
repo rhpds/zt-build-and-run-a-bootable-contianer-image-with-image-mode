@@ -1,5 +1,54 @@
-= My Lab Title
+= Build and Run a Bootable Container Image with Image Mode for RHEL and Podman Desktop
 
-This project was created with the RHDP Publishing House template.
+== Overview
 
-Run `/rhdp-publishing-house` in Claude Code to begin.
+Image mode for Red Hat Enterprise Linux uses a container-native approach to build, deploy, and manage the operating system as a bootable container. This enables developers to bundle runtimes, drivers, dependencies, and applications into a single bootable container image that can be converted to bootable cloud images or bare metal installers.
+
+In this lab, you will:
+
+* Configure Red Hat SSO authentication in Podman Desktop to access the Red Hat Container Registry
+* Build a LAMP (Linux, Apache, MariaDB, PHP) application within a development container environment
+* Package the application as an immutable bootable container image
+* Deploy the bootable container image as a virtual machine disk image
+
+== Target Audience
+
+This lab is designed for:
+
+* **Developers** looking to learn container-native OS deployment workflows
+* **Platform engineers** exploring image mode for RHEL
+* **DevOps engineers** interested in bootable container workflows
+
+== Prerequisites
+
+Before starting this lab, you should have:
+
+* Basic understanding of Linux command line
+* Familiarity with containers and containerization concepts
+* Basic knowledge of LAMP stack components (Apache, MariaDB, PHP)
+
+== Lab Duration
+
+**Total time:** Approximately 75 minutes
+
+* Module 1: Access the Red Hat Container Registry (10 min)
+* Module 2: Build a LAMP Development Container (25 min)
+* Module 3: Build and Run a Bootable LAMP Disk Image (30 min)
+
+== Learning Objectives
+
+By completing this lab, you will be able to:
+
+. Configure Red Hat SSO authentication in Podman Desktop
+. Build a LAMP application development environment using RHEL Universal Base Image containers
+. Create and configure MariaDB databases with automated initialization scripts
+. Build bootable container images from Containerfiles using image mode for RHEL
+. Deploy bootable container images as virtual machine disk images in qcow2 format
+
+== Lab Environment
+
+You will work in a RHEL 10 build host with Podman Desktop pre-installed. All activities are performed within this environment, including building containers, creating bootable images, and deploying virtual machines.
+
+== Get Started
+
+When you're ready, proceed to xref:module-01-access-registry.adoc[Module 1: Access the Red Hat Container Registry].

@@ -1,0 +1,290 @@
+= Module 3: Build and Run a Bootable LAMP Disk Image
+
+== Introduction
+
+In this module, you will convert your LAMP development container into a production-ready bootable container image using image mode for RHEL. You'll create a Containerfile that includes all application files and configuration, build a bootable container image, generate a VM disk image (qcow2), and launch the application as a virtual machine.
+
+**Estimated time:** 30 minutes
+
+== What You'll Do
+
+* Create a systemd service for automated MariaDB initialization
+* Write a production Containerfile for a bootable container
+* Build a bootable container image
+* Generate a qcow2 disk image using bootc-image-builder
+* Launch and verify the bootable VM
+
+== Prerequisites
+
+* Completed Module 2 (working LAMP development container)
+* Application files in `~/lamp-dev/bootc/app/`
+
+== Steps
+
+=== Step 1: Create the MariaDB Initialization Service
+
+Create a systemd service file that will automatically initialize MariaDB on first boot:
+
+Create `~/lamp-dev/bootc/mariadb-setup.service`:
+
+[source,ini]
+----
+[Unit]
+Description=MariaDB Initial Setup
+After=mariadb.service
+ConditionPathExists=/var/local/setup.sql
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/mysqladmin ping -u root --wait=30
+ExecStart=/usr/bin/mysql -u root --batch -e "source /var/local/setup.sql"
+ExecStartPost=/bin/rm /var/local/setup.sql
+
+[Install]
+WantedBy=multi-user.target
+----
+
+This service:
+
+* Runs once on first boot after MariaDB starts
+* Waits for MariaDB to be ready
+* Executes the database setup script
+* Removes the setup script after completion (security best practice)
+
+=== Step 2: Create the Production Containerfile
+
+Create a new file `~/lamp-dev/bootc/Containerfile.bootc` for the bootable container:
+
+[source,dockerfile]
+----
+FROM registry.redhat.io/rhel10/rhel-bootc
+
+LABEL maintainer="Your Name <youremail@example.com>" \
+      description="Bootable LAMP server on RHEL 10."
+
+# Install System Dependencies
+RUN dnf install -y \
+    --exclude=kernel-debug* \
+    httpd \
+    mariadb-server \
+    php \
+    php-mysqlnd \
+    selinux-policy-devel \
+    firewalld \
+    && dnf clean all
+
+# Copy Application and Configuration Files
+COPY app/index.php /var/www/html/index.php
+COPY app/myapp.conf /etc/httpd/conf.d/myapp.conf
+COPY app/db-setup.sql /var/local/setup.sql
+COPY mariadb-setup.service /etc/systemd/system/
+
+# Set Permissions
+RUN chown -R apache:apache /var/www/html && \
+    chmod 644 /var/local/setup.sql && \
+    chmod 644 /etc/systemd/system/mariadb-setup.service
+
+# Configure SELinux
+RUN setsebool -P httpd_can_network_connect_db 1
+
+# Configure Services
+RUN systemctl enable httpd.service mariadb.service \
+    mariadb-setup.service firewalld.service
+
+# Configure Firewall
+RUN firewall-offline-cmd --add-service=http
+----
+
+Key differences from the development Containerfile:
+
+* Uses `rhel-bootc` base image (designed for bootable containers)
+* Excludes debug kernels to reduce image size
+* Includes SELinux configuration (`httpd_can_network_connect_db`)
+* Enables firewall with HTTP service
+* Copies application files into the image (no volume mounts)
+* Enables all services to start automatically on boot
+
+=== Step 3: Ensure Application Files Are Ready
+
+Make sure the following files exist in `~/lamp-dev/bootc/app/`:
+
+[source,bash]
+----
+cd ~/lamp-dev/bootc
+ls -la app/
+----
+
+You should see:
+
+* `index.php` - PHP application
+* `myapp.conf` - Apache configuration
+* `db-setup.sql` - Database initialization script
+
+If any are missing, copy them from the development container or recreate them from Module 2.
+
+=== Step 4: Build the Bootable Container Image
+
+. Open Podman Desktop
+. Navigate to **Images** → **Build**
+. Configure the build:
+   * **Containerfile path:** `~/lamp-dev/bootc/Containerfile.bootc`
+   * **Build context directory:** `~/lamp-dev/bootc`
+   * **Image name:** `lamp-dev-bootc-image`
+   * **Platform:** `linux/amd64`
+. Click **Build**
+. Wait for the build to complete
+
+NOTE: This build downloads the RHEL bootc base image (~700MB compressed), so it may take several minutes on first run.
+
+=== Step 5: Verify the Bootable Container Image
+
+Once the build completes, the image `lamp-dev-bootc-image` should appear in your Images list in Podman Desktop.
+
+You can optionally test this image as a regular container before creating a disk image:
+
+[source,bash]
+----
+podman run -d --name lamp-bootc-test -p 8080:80 lamp-dev-bootc-image
+----
+
+Then access http://localhost:8080 in a browser to see if it works.
+
+Stop and remove the test container:
+
+[source,bash]
+----
+podman stop lamp-bootc-test
+podman rm lamp-bootc-test
+----
+
+=== Step 6: Build the Disk Image
+
+Now convert the bootable container image into a VM disk image:
+
+. In Podman Desktop, navigate to **Bootable Containers** in the left sidebar
+. Go to the **Images** section
+. Locate `lamp-dev-bootc-image`
+. Click the **three-dot menu** (kebab menu) next to the image
+. Select **Build Disk Image**
+. Configure the disk image:
+   * **Image type:** Select **"Virtualization Guest Image (qcow2)"**
+   * **Filesystem:** Use default
+. Expand **Interactive build config**
+. Enter SSH credentials:
+   * **Username:** (your username, e.g., `admin`)
+   * **SSH public key:** (paste your SSH public key)
+   * Check **Add user to wheel group** (for sudo access)
+. Click **Build**
+. Enter your system password when prompted
+
+The build process will:
+
+* Use `bootc-image-builder` to convert the container to a disk image
+* Create a qcow2 file suitable for KVM/QEMU
+* Configure the SSH access you specified
+
+This process takes 5-10 minutes.
+
+=== Step 7: Verify Disk Image Creation
+
+Once complete, you should see a success message. The disk image is saved in:
+
+`~/.local/share/containers/storage/bootc-image-builder/`
+
+Navigate to **Bootable Containers** → **Disk Images** in Podman Desktop to see your built disk image.
+
+=== Step 8: Launch the Virtual Machine
+
+. In the **Disk Images** view, locate your LAMP disk image
+. Click **Virtual Machine (Experimental)**
+. Ensure you meet the prerequisites:
+   * Nested virtualization enabled
+   * Sufficient RAM and disk space
+. The VM will launch using the built disk image
+
+The VM boots with:
+
+* MariaDB automatically initialized on first boot
+* Apache HTTP Server running
+* Firewall configured to allow HTTP traffic
+* Your LAMP application ready to serve requests
+
+=== Step 9: Access the Virtual Machine
+
+Once the VM boots:
+
+. Note the VM's IP address (displayed in Podman Desktop)
+. SSH into the VM using the credentials you configured:
++
+[source,bash]
+----
+ssh admin@<VM_IP_ADDRESS>
+----
+
+. Verify services are running:
++
+[source,bash]
+----
+systemctl status httpd
+systemctl status mariadb
+----
+
+. Test the application from within the VM:
++
+[source,bash]
+----
+curl localhost
+----
++
+You should see the "Hello, World!" HTML output.
+
+. Test from your host machine:
++
+[source,bash]
+----
+curl http://<VM_IP_ADDRESS>
+----
+
+== Verification
+
+You have successfully completed this module when:
+
+* A bootable disk image appears in **Bootable Containers → Disk Images**
+* The VM launches successfully from the disk image
+* You can SSH into the running VM
+* Apache and MariaDB services are active
+* Accessing the VM's IP address in a browser shows "Hello, World!"
+
+== Key Concepts
+
+* **Bootable containers:** Container images designed to boot as operating systems
+* **image mode for RHEL:** Container-native approach to OS deployment
+* **bootc-image-builder:** Converts container images to bootable disk images
+* **Immutable infrastructure:** Application and OS bundled together
+* **qcow2 format:** QEMU/KVM disk image format for virtual machines
+
+== What You've Accomplished
+
+Congratulations! You have:
+
+. ✅ Authenticated to the Red Hat Container Registry
+. ✅ Built a LAMP development environment in a container
+. ✅ Created a bootable container image with your application
+. ✅ Generated a VM disk image from the bootable container
+. ✅ Deployed and verified a running VM with your LAMP application
+
+== Next Steps
+
+Now that you understand the bootable container workflow, you can:
+
+* **Iterate and update:** Modify the Containerfile, rebuild the image, and update the VM
+* **Create ISO images:** Convert to ISO for bare metal deployment
+* **Integrate with CI/CD:** Automate image builds using GitHub Actions, GitLab CI, or Jenkins
+* **Explore advanced features:** Learn about image rollback, A/B updates, and version management
+* **Scale to production:** Deploy bootable containers in cloud or edge environments
+
+== Additional Resources
+
+* https://developers.redhat.com/articles/2024/11/05/build-and-run-bootable-container-image-image-mode-rhel-and-podman-desktop[Red Hat Developer: Build and Run Bootable Container Images]
+* https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10-beta/html-single/composing_installing_and_managing_rhel_for_edge_images/index[RHEL Image Mode Documentation]
+* https://github.com/osbuild/bootc-image-builder[bootc-image-builder GitHub Repository]

@@ -1,0 +1,297 @@
+= Module 2: Build a LAMP Development Container
+
+== Introduction
+
+In this module, you will create a LAMP (Linux, Apache, MariaDB, PHP) application development environment using Red Hat Universal Base Image containers. You'll build a development container with volume mounts for iterative development, configure MariaDB with automated initialization, and verify the working application.
+
+**Estimated time:** 25 minutes
+
+== What You'll Do
+
+* Create a Containerfile for a LAMP development environment
+* Build a container image using Podman Desktop
+* Run a development container with volume mounts
+* Configure and initialize a MariaDB database
+* Create a PHP application that connects to MariaDB
+* Verify the working LAMP application
+
+== Prerequisites
+
+* Completed Module 1 (authenticated to Red Hat Container Registry)
+* Basic understanding of containers and Containerfiles
+
+== Steps
+
+=== Step 1: Create the Project Directory Structure
+
+Create a working directory for your LAMP development environment:
+
+[source,bash]
+----
+mkdir -p ~/lamp-dev/bootc/app
+cd ~/lamp-dev/bootc
+----
+
+This creates:
+
+* `lamp-dev/` - Main project directory
+* `lamp-dev/bootc/` - Location for your Containerfile
+* `lamp-dev/bootc/app/` - Application files (will be mounted into the container)
+
+=== Step 2: Create the Development Containerfile
+
+Create a file named `Containerfile` in the `~/lamp-dev/bootc/` directory with the following content:
+
+[source,dockerfile]
+----
+# Start from the Red Hat Universal Base Image 10. Since we're using
+# this container as a development environment, we'll use ubi-init which
+# includes systemd.
+FROM registry.redhat.io/ubi10/ubi-init:latest
+
+# Good practice to label your images.
+LABEL maintainer="Your Name <youremail@example.com>" \
+      description="LAMP development environment based on UBI 10."
+
+# Install Apache, PHP, and the MySQL driver using dnf
+RUN dnf install -y \
+        httpd \
+        php \
+        php-mysqlnd \
+        mariadb-server \
+        ncurses \
+        procps \
+    && dnf clean all
+
+# Expose port 80 for the web server
+EXPOSE 80
+
+# Start services
+CMD ["/sbin/init"]
+----
+
+This Containerfile:
+
+* Uses UBI 10 with systemd (`ubi-init`) for running services
+* Installs Apache HTTP Server, PHP, MariaDB, and required utilities
+* Exposes port 80 for web traffic
+* Starts systemd as the init process
+
+=== Step 3: Build the Container Image in Podman Desktop
+
+. Open Podman Desktop
+. Navigate to **Images** in the left navigation
+. Click **Build** in the top right corner
+. Configure the build:
+   * **Containerfile path:** Browse to `~/lamp-dev/bootc/Containerfile`
+   * **Image name:** `lamp-dev-image`
+   * **Platform:** Select `linux/amd64` (Intel/AMD x86_64)
+. Click **Build**
+. Wait for the build to complete (you'll see the build output in the console)
+. Click **Done** when the build finishes
+
+The image `lamp-dev-image` should now appear in your Images list.
+
+=== Step 4: Create and Configure the Container
+
+Now you'll create a container from your image with specific configuration for development:
+
+. In the **Images** section, locate `lamp-dev-image`
+. Click the **Play** (►) button next to the image
+. Configure the container:
+   * **Container name:** `lamp-dev`
+   * **Port mapping:** (leave default for now)
+
+. Click on **Volumes** to add a volume mount:
+   * **Path on Host:** `~/lamp-dev/bootc/app`
+   * **Path inside container:** `/app:z`
++
+NOTE: The `:z` directive is important on SELinux-enabled systems. It relabels the directory so both the host and container can access it.
+
+. Click on **Security** section
+. Scroll to **Specify user namespace to use:** field
+. Enter: `host`
++
+TIP: This maps your desktop user account to the container user identity (UID), enabling seamless file sharing between host and container.
+
+. Click **Start container**
+
+=== Step 5: Access the Container Terminal
+
+. Navigate to **Containers** in the left navigation
+. Double-click the `lamp-dev` container
+. Select the **Terminal** tab
+
+You now have command-line access to your running container.
+
+=== Step 6: Configure and Start MariaDB
+
+In the container terminal, enable and start the MariaDB service:
+
+[source,bash]
+----
+systemctl enable --now mariadb.service
+----
+
+This command enables MariaDB to start automatically and starts it immediately.
+
+=== Step 7: Create the Database Setup Script
+
+Create a file named `db-setup.sql` in the `/app` directory inside the container:
+
+[source,bash]
+----
+cat > /app/db-setup.sql << 'EOF'
+CREATE DATABASE hellodb;
+CREATE USER 'hellouser'@'localhost' IDENTIFIED BY 'SecurePassword';
+GRANT ALL PRIVILEGES ON hellodb.* TO 'hellouser'@'localhost';
+FLUSH PRIVILEGES;
+
+USE hellodb;
+
+CREATE TABLE greetings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message VARCHAR(255) NOT NULL
+);
+
+INSERT INTO greetings (message) VALUES ('Hello, World!');
+EOF
+----
+
+IMPORTANT: The database name (`hellodb`), username (`hellouser`), and password (`SecurePassword`) defined here will be used by the PHP application in the next step.
+
+=== Step 8: Initialize the Database
+
+Load the setup script into MariaDB:
+
+[source,bash]
+----
+/usr/bin/mariadb -u root < /app/db-setup.sql
+----
+
+This creates the database, user, table, and inserts the initial data.
+
+=== Step 9: Create the PHP Application
+
+On your **host machine** (not in the container), create a file at `~/lamp-dev/bootc/app/index.php`:
+
+[source,php]
+----
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LAMP Stack Hello World</title>
+</head>
+<body>
+    <h1>
+        <?php
+        $host = '127.0.0.1';
+        $db   = 'hellodb';
+        $user = 'hellouser';
+        $pass = 'SecurePassword';
+        $charset = 'utf8mb4';
+
+        $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+        $options = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ];
+
+        try {
+             $pdo = new PDO($dsn, $user, $pass, $options);
+             $stmt = $pdo->query('SELECT message FROM greetings');
+             $row = $stmt->fetch();
+             echo htmlspecialchars($row['message']);
+        } catch (\PDOException $e) {
+             echo "Error: Could not connect to database.";
+             // In a real app, you would log this error, not display it.
+             // throw new \PDOException($e->getMessage(), (int)$e->getCode());
+        }
+        ?>
+    </h1>
+</body>
+</html>
+----
+
+TIP: Because we mounted `~/lamp-dev/bootc/app` to `/app:z` in the container, any files you create in this directory on the host are immediately visible inside the container.
+
+=== Step 10: Deploy the Application to Apache
+
+Back in the **container terminal**, copy the PHP script to Apache's web root:
+
+[source,bash]
+----
+cp /app/index.php /var/www/html/
+----
+
+=== Step 11: Configure Apache
+
+Create an Apache configuration file:
+
+[source,bash]
+----
+cat > /app/myapp.conf << 'EOF'
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+    ErrorLog /var/log/httpd/error_log
+    CustomLog /var/log/httpd/access_log combined
+</VirtualHost>
+EOF
+----
+
+Deploy the configuration and start Apache:
+
+[source,bash]
+----
+cp /app/myapp.conf /etc/httpd/conf.d/
+systemctl start httpd
+----
+
+=== Step 12: Test the Application
+
+Test your LAMP application from inside the container:
+
+[source,bash]
+----
+curl 127.0.0.1
+----
+
+You should see HTML output similar to:
+
+[source,html]
+----
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LAMP Stack Hello World</title>
+</head>
+<body>
+    <h1>
+        Hello, World!    </h1>
+</body>
+</html>
+----
+
+If you see "Hello, World!" in the output, your LAMP stack is working correctly!
+
+== Verification
+
+You have successfully completed this module when:
+
+* The `lamp-dev` container is running in Podman Desktop
+* MariaDB service is active inside the container
+* Apache HTTP Server is running inside the container
+* Running `curl 127.0.0.1` from the container terminal returns HTML containing "Hello, World!"
+
+== Key Concepts
+
+* **Volume mounts with `:z`:** Allow file sharing between host and container on SELinux systems
+* **User namespace mapping:** Using `host` mode enables seamless file permissions
+* **Development workflow:** Edit files on the host, test immediately in the container
+* **Service management:** Using systemd inside containers with `ubi-init` base image
+
+== What's Next
+
+You've built a working LAMP development environment. In xref:module-03-bootable-disk-image.adoc[Module 3: Build and Run a Bootable LAMP Disk Image], you'll package this application as a production-ready bootable container image and deploy it as a virtual machine.
